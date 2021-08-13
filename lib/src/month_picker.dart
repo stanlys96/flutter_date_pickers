@@ -11,7 +11,21 @@ import 'layout_settings.dart';
 import 'semantic_sorting.dart';
 import 'utils.dart';
 
-const Locale _defaultLocale = Locale('en', 'US');
+List<List<Widget>> makeNestedList(List<Widget> list) {
+  List<List<Widget>> output = [];
+  List<Widget> temp = [];
+  for (int i = 0; i < list.length; i++) {
+    if (i % 4 == 0 && i != 0) {
+      output.add(temp);
+      temp = [];
+    }
+    temp.add(list[i]);
+  }
+  output.add(temp);
+  return output;
+}
+
+const Locale _defaultLocale = Locale('id', 'ID');
 
 /// Month picker widget.
 class MonthPicker extends StatefulWidget {
@@ -341,7 +355,8 @@ class _MonthPicker extends StatelessWidget {
     final int year = displayedYear.year;
     final int day = 1;
 
-    final List<Widget> labels = <Widget>[];
+    final List<Widget> labels = [];
+    List<List<Widget>> nestedLabels = [];
 
     for (int i = 0; i < monthsInYear; i += 1) {
       final int month = i + 1;
@@ -369,6 +384,7 @@ class _MonthPicker extends StatelessWidget {
       String monthStr = _getMonthStr(monthToBuild);
 
       Widget monthWidget = Container(
+        height: 50,
         decoration: decoration,
         child: Center(
           child: Semantics(
@@ -401,11 +417,12 @@ class _MonthPicker extends StatelessWidget {
       }
       labels.add(monthWidget);
     }
+    nestedLabels = makeNestedList(labels);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Column(
-        children: <Widget>[
+        children: [
           Container(
             height: datePickerLayoutSettings.dayPickerRowHeight,
             child: Center(
@@ -418,13 +435,28 @@ class _MonthPicker extends StatelessWidget {
               ),
             ),
           ),
-          Flexible(
-            child: GridView.count(
-              physics: datePickerLayoutSettings.scrollPhysics,
-              crossAxisCount: 4,
-              children: labels,
+          Expanded(
+            child: ListView.builder(
+              itemCount: nestedLabels.length,
+              itemBuilder: (context, index) {
+                var labels = nestedLabels[index];
+                return Row(
+                  children: labels.map<Widget>((label) {
+                    return Expanded(
+                      child: label,
+                    );
+                  }).toList(),
+                );
+              },
             ),
           ),
+          // Flexible(
+          //   child: GridView.count(
+          //     physics: datePickerLayoutSettings.scrollPhysics,
+          //     crossAxisCount: 4,
+          //     children: labels,
+          //   ),
+          // ),
         ],
       ),
     );
@@ -434,7 +466,7 @@ class _MonthPicker extends StatelessWidget {
   // We can'r use [localizations] here because MaterialLocalizations doesn't
   // provide short month string.
   String _getMonthStr(DateTime date) {
-    String month = intl.DateFormat.MMM(locale.toString()).format(date);
+    String month = intl.DateFormat('MMM', 'id').format(date);
     return month;
   }
 }
